@@ -1,0 +1,81 @@
+import random
+import time
+import sys
+
+WIDTH = 80
+HEIGHT = 24
+
+# Put your own lyrics/text here, each with its own duration (in seconds)
+lyrics = [
+    ("but you should know", 2.5),
+    ("that i died slow", 2.2),
+    ("running through the halls of your haunted home", 4.3),
+    ("and the toughest part is that we both know", 4.3),
+    ("what happened to you", 2),
+    ("why you're out on your own", 3),
+    ("Merry Christmas, please dont call", 3.5),
+    ("Merry Christmas, i'm not yours at all", 3.5),
+    ("Merry Christmas, please dont call me", 6.5),
+]
+
+# Snowflake positions
+snowflakes = []
+
+# Hide cursor and clear screen once
+print("\033[2J\033[?25l", end="")
+
+def move_cursor(x, y):
+    print(f"\033[{y};{x}H", end="")
+
+try:
+    lyric_index = 0
+    lyric_timer = time.time()
+
+    while True:
+        # Add new snowflakes
+        if random.random() < 0.35:
+            snowflakes.append([random.randint(1, WIDTH), 1])
+
+        # Move snowflakes downward
+        for flake in snowflakes:
+            flake[1] += 1
+
+        # Remove snowflakes that are off-screen
+        snowflakes = [f for f in snowflakes if f[1] <= HEIGHT]
+
+        # Create empty frame
+        frame = [[" " for _ in range(WIDTH)] for _ in range(HEIGHT)]
+
+        # Draw snowflakes
+        for x, y in snowflakes:
+            if 1 <= y <= HEIGHT and 1 <= x <= WIDTH:
+                frame[y-1][x-1] = random.choice(["❄", "*", "."])
+
+        # Draw current lyric in the middle
+        text, duration = lyrics[lyric_index]
+        row = HEIGHT // 2
+        start = max(0, (WIDTH - len(text)) // 2)
+
+        for i, ch in enumerate(text):
+            if start + i < WIDTH:
+                frame[row][start + i] = ch
+
+        # Move cursor to top-left
+        move_cursor(1, 1)
+
+        # Print frame
+        for r in frame:
+            print("".join(r))
+
+        sys.stdout.flush()
+
+        # Change lyric based on its own duration
+        if time.time() - lyric_timer > duration:
+            lyric_index = (lyric_index + 1) % len(lyrics)
+            lyric_timer = time.time()
+
+        time.sleep(0.08)  # ~20 FPS smooth animation
+
+except KeyboardInterrupt:
+    # Show cursor again when exiting
+    print("\033[?25h")
